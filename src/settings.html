@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uptime Kuma Agent Settings</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #38bdf8;
+            --text-color: #f1f5f9;
+            --input-bg: #1e293b;
+            --input-border: #334155;
+            --button-hover: #0ea5e9;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--accent-color);
+            text-align: center;
+            letter-spacing: -0.025em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #94a3b8;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #0f172a;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #94a3b8;
+            border: 1px solid var(--input-border);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+        }
+
+        .status {
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 16px;
+            height: 1.2rem;
+            color: #10b981;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Push Agent Settings</h1>
+
+        <div class="form-group">
+            <label for="url">Kuma Push URL</label>
+            <input type="text" id="url" placeholder="https://kuma.example.com/api/push/..." spellcheck="false">
+        </div>
+
+        <div class="form-group">
+            <label for="interval">Interval (seconds)</label>
+            <input type="number" id="interval" min="1" placeholder="30">
+        </div>
+
+        <div class="form-group">
+            <label for="ping_target">External Ping Target (IP/Domain)</label>
+            <input type="text" id="ping_target" placeholder="8.8.8.8" spellcheck="false">
+        </div>
+
+        <div class="form-group"
+            style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 24px;">
+            <input type="checkbox" id="autostart" style="width: auto; cursor: pointer;">
+            <label for="autostart" style="margin-bottom: 0; cursor: pointer;">Run at system startup</label>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" id="enable_logging" style="width: auto; cursor: pointer;">
+            <label for="enable_logging" style="margin-bottom: 0; cursor: pointer;">Enable file logging
+                (logs/agent.log)</label>
+        </div>
+
+        <div class="actions">
+            <button class="btn-secondary" id="cancel">Cancel</button>
+            <button class="btn-primary" id="save">Save Changes</button>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('url');
+        const intervalInput = document.getElementById('interval');
+        const autostartInput = document.getElementById('autostart');
+        const loggingInput = document.getElementById('enable_logging');
+        const pingTargetInput = document.getElementById('ping_target');
+        const saveBtn = document.getElementById('save');
+        const cancelBtn = document.getElementById('cancel');
+        const statusEl = document.getElementById('status');
+
+        // Request current config from Rust
+        window.onload = () => {
+            window.ipc.postMessage('request_config');
+        };
+
+        // Listen for data from Rust
+        window.addEventListener('message', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'config') {
+                    urlInput.value = data.kuma_push_url;
+                    intervalInput.value = data.interval_sec;
+                    autostartInput.checked = data.autostart;
+                    loggingInput.checked = data.enable_logging !== false;
+                    pingTargetInput.value = data.ping_target || '';
+                } else if (data.type === 'success') {
+                    statusEl.innerText = 'Settings saved successfully!';
+                    setTimeout(() => {
+                        window.ipc.postMessage('close_window');
+                    }, 1500);
+                }
+            } catch (e) {
+                console.error('Failed to parse message:', e);
+            }
+        });
+
+        saveBtn.onclick = () => {
+            const config = {
+                kuma_push_url: urlInput.value,
+                interval_sec: parseInt(intervalInput.value, 10),
+                autostart: autostartInput.checked,
+                enable_logging: loggingInput.checked,
+                ping_target: pingTargetInput.value
+            };
+            window.ipc.postMessage(JSON.stringify(config));
+            statusEl.innerText = 'Saving...';
+        };
+
+        cancelBtn.onclick = () => {
+            window.ipc.postMessage('close_window');
+        };
+    </script>
+</body>
+
+</html>

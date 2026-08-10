@@ -1,0 +1,3 @@
+kuma_push_url = "https://_YOUR_DOMAIN_/api/push/_YOUR_TOKEN_?status=up&msg=OK"
+interval_sec = 30
+ping_target = "8.8.8.8"

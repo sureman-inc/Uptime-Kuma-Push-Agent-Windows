@@ -1,35 +1,7 @@
-# Uptime Kuma Push Agent for Windows
-
-Windows push agent for Uptime Kuma.
+# Uptime Kuma Agent Guide
 
 ## Quick Start
 On the first launch, the application will automatically open the **Settings** window. You only need to enter your details and click **Save**.
-
-## How to Build
-To compile this project from source, you need to have the Rust toolchain installed.
-
-1. Install Rust (cargo, rustc): [rustup.rs](https://rustup.rs/)
-2. Clone this repository.
-3. Open a terminal (PowerShell or CMD) in the project directory.
-4. Run the build command:
-   - **Using Cargo**:
-     ```bash
-     # Debug build
-     cargo build
-
-     # Release build (optimized, recommended for production)
-     cargo build --release
-     ```
-   - **Using Makefile** (if you have `make` installed on Windows):
-     ```bash
-     # Debug build
-     make build
-
-     # Release build
-     make release
-     ```
-5. The compiled executable `kuma_agent.exe` will be located in `target/debug/` or `target/release/` depending on the build target.
-
 
 ## Data Storage
 All settings and logs are located at:
@@ -65,3 +37,4 @@ The application log is located at `%APPDATA%\KumaAgent\logs\agent.log`.
 ## Troubleshooting
 - **The window does not open**: Check if another instance of the application is already running in the system tray.
 - **Data is not sent**: Check `agent.log` to see the final request URL being sent by the agent.
+
