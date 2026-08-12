@@ -4,234 +4,863 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uptime Kuma Agent Settings</title>
+    <title>Uptime Kuma Agent - Settings</title>
     <style>
         :root {
-            --bg-color: #000000;
-            --card-bg: rgba(30, 41, 59, 0.7);
+            --bg-base: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
             --accent-color: #38bdf8;
-            --text-color: #f1f5f9;
+            --accent-hover: #0ea5e9;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
             --input-bg: #1e293b;
             --input-border: #334155;
-            --button-hover: #0ea5e9;
+            --input-focus: #38bdf8;
+            --success-color: #10b981;
+            --danger-color: #f43f5e;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
             height: 100vh;
             overflow: hidden;
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at 10% 10%, #1e293b 0%, #0b0f19 90%);
+            user-select: none;
         }
 
-        .container {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 24px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.4s ease-out;
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 16px 20px;
+            overflow: hidden;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--card-border);
+            flex-shrink: 0;
         }
 
-        h1 {
-            font-size: 1.5rem;
+        .brand-title {
+            font-size: 1.15rem;
             font-weight: 700;
-            margin-bottom: 24px;
             color: var(--accent-color);
-            text-align: center;
-            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        /* Tabs */
+        .tabs-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(51, 65, 85, 0.6);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: #0f172a;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+        }
+
+        .badge-count {
+            background: rgba(0, 0, 0, 0.25);
+            color: inherit;
+            padding: 1px 7px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 6px;
+            min-height: 0;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Custom Scrollbar */
+        .tab-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tab-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tab-content::-webkit-scrollbar-thumb {
+            background: var(--input-border);
+            border-radius: 3px;
+        }
+
+        /* Form elements */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .form-row:last-child {
+            margin-bottom: 0;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
         }
 
         label {
-            display: block;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            margin-bottom: 8px;
-            color: #94a3b8;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        input {
-            width: 100%;
-            padding: 10px 12px;
+        input, select {
             background-color: var(--input-bg);
             border: 1px solid var(--input-border);
-            border-radius: 8px;
-            color: var(--text-color);
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            box-sizing: border-box;
-        }
-
-        input:focus {
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
             outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            width: 100%;
+            min-width: 0;
         }
 
-        .actions {
+        input:focus, select:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .helper-text {
+            font-size: 0.72rem;
+            color: #64748b;
+            line-height: 1.3;
+        }
+
+        .checkbox-group {
             display: flex;
-            gap: 12px;
-            margin-top: 32px;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
         }
 
-        button {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
+        .checkbox-group input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-color);
+        }
+
+        /* Devices List */
+        .devices-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .devices-title {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .btn-add-device {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-color);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
             transition: all 0.2s;
-            border: none;
-            font-size: 0.95rem;
+        }
+
+        .btn-add-device:hover {
+            background: var(--accent-color);
+            color: #0f172a;
+        }
+
+        /* Enhanced Device Card Layout */
+        .device-card {
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: border-color 0.2s, background 0.2s;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        .device-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        .device-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .device-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .device-name-input {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #ffffff;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .device-name-input:focus {
+            background: var(--input-bg);
+        }
+
+        .device-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preset-select {
+            font-size: 0.78rem;
+            padding: 5px 8px;
+            background: rgba(15, 23, 42, 0.8);
+            border-color: var(--input-border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: auto;
+            max-width: 190px;
+        }
+
+        .preset-select:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-color);
+        }
+
+        .device-card-body {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .type-port-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: 1px solid var(--input-border);
+            color: var(--text-secondary);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-icon.delete:hover {
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+            background: rgba(244, 63, 94, 0.15);
+        }
+
+        .btn-test {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-test:hover {
+            background: var(--success-color);
+            color: #0f172a;
+        }
+
+        .test-badge {
+            font-size: 0.74rem;
+            padding: 3px 8px;
+            border-radius: 5px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .test-badge.success {
+            display: inline-flex;
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .test-badge.error {
+            display: inline-flex;
+            background: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+        }
+
+        .test-badge.loading {
+            display: inline-flex;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 36px 16px;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            background: var(--card-bg);
+            border: 1px dashed var(--card-border);
+            border-radius: 10px;
+        }
+
+        /* Footer Actions */
+        .app-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px solid var(--card-border);
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .status-msg {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--success-color);
+            transition: opacity 0.3s;
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
         }
 
         .btn-primary {
             background-color: var(--accent-color);
             color: #0f172a;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 7px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(56, 189, 248, 0.25);
         }
 
         .btn-primary:hover {
-            background-color: var(--button-hover);
+            background-color: var(--accent-hover);
             transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background-color: transparent;
-            color: #94a3b8;
+            background: transparent;
+            color: var(--text-secondary);
             border: 1px solid var(--input-border);
+            padding: 9px 16px;
+            border-radius: 7px;
+            font-weight: 500;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
         }
 
-        .status {
-            font-size: 0.8rem;
-            text-align: center;
-            margin-top: 16px;
-            height: 1.2rem;
-            color: #10b981;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Push Agent Settings</h1>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand-title">
+                <span>⚡ Uptime Kuma Agent</span>
+            </div>
+            <div id="status_indicator" class="status-msg"></div>
+        </header>
 
-        <div class="form-group">
-            <label for="url">Kuma Push URL</label>
-            <input type="text" id="url" placeholder="https://kuma.example.com/api/push/..." spellcheck="false">
+        <!-- Tabs Navigation -->
+        <nav class="tabs-nav">
+            <button class="tab-btn active" id="tab_btn_general" onclick="switchTab('general')">
+                ⚙️ General Settings
+            </button>
+            <button class="tab-btn" id="tab_btn_devices" onclick="switchTab('devices')">
+                🌐 Monitored Devices <span class="badge-count" id="devices_badge">0</span>
+            </button>
+        </nav>
+
+        <!-- General Tab -->
+        <div id="tab_general" class="tab-content active">
+            <div class="card">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1.8;">
+                        <label for="branch_name">Branch / Location Name</label>
+                        <input type="text" id="branch_name" placeholder="e.g. Main Restaurant, Downtown Store">
+                    </div>
+                    <div class="form-group" style="flex: 0.8;">
+                        <label for="interval_sec">Check Interval (sec)</label>
+                        <input type="number" id="interval_sec" min="5" placeholder="30">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px;">
+                    <label for="kuma_base_url">Uptime Kuma Base URL</label>
+                    <input type="text" id="kuma_base_url" placeholder="https://kuma.yourdomain.com" spellcheck="false">
+                    <span class="helper-text">Base URL of your Uptime Kuma server (tokens will be automatically appended)</span>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px;">
+                    <label for="agent_push_token">Host PC Heartbeat Token (Optional)</label>
+                    <input type="text" id="agent_push_token" placeholder="Optional token for agent host status" spellcheck="false">
+                    <span class="helper-text">Sends heartbeat confirming this Windows agent PC is online and reachable</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="form-row" style="flex-direction: column; gap: 12px;">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="autostart">
+                        <span>Launch automatically on Windows startup</span>
+                    </label>
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="enable_logging">
+                        <span>Enable logging to file (%APPDATA%\KumaAgent\logs\agent.log)</span>
+                    </label>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="interval">Interval (seconds)</label>
-            <input type="number" id="interval" min="1" placeholder="30">
+        <!-- Devices Tab -->
+        <div id="tab_devices" class="tab-content">
+            <div class="devices-header">
+                <span class="devices-title">Monitored Network Infrastructure</span>
+                <button class="btn-add-device" onclick="addDevice()">+ Add Device</button>
+            </div>
+
+            <div id="devices_container">
+                <!-- Device cards rendered dynamically here -->
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="ping_target">External Ping Target (IP/Domain)</label>
-            <input type="text" id="ping_target" placeholder="8.8.8.8" spellcheck="false">
-        </div>
-
-        <div class="form-group"
-            style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 24px;">
-            <input type="checkbox" id="autostart" style="width: auto; cursor: pointer;">
-            <label for="autostart" style="margin-bottom: 0; cursor: pointer;">Run at system startup</label>
-        </div>
-
-        <div class="form-group" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-            <input type="checkbox" id="enable_logging" style="width: auto; cursor: pointer;">
-            <label for="enable_logging" style="margin-bottom: 0; cursor: pointer;">Enable file logging
-                (logs/agent.log)</label>
-        </div>
-
-        <div class="actions">
-            <button class="btn-secondary" id="cancel">Cancel</button>
-            <button class="btn-primary" id="save">Save Changes</button>
-        </div>
-
-        <div id="status" class="status"></div>
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-buttons">
+                <button class="btn-secondary" id="btn_cancel" onclick="closeAppWindow()">Cancel</button>
+                <button class="btn-primary" id="btn_save" onclick="saveConfiguration()">Save Changes</button>
+            </div>
+        </footer>
     </div>
 
     <script>
-        const urlInput = document.getElementById('url');
-        const intervalInput = document.getElementById('interval');
-        const autostartInput = document.getElementById('autostart');
-        const loggingInput = document.getElementById('enable_logging');
-        const pingTargetInput = document.getElementById('ping_target');
-        const saveBtn = document.getElementById('save');
-        const cancelBtn = document.getElementById('cancel');
-        const statusEl = document.getElementById('status');
+        let currentDevices = [];
 
-        // Request current config from Rust
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tabName === 'general') {
+                document.getElementById('tab_btn_general').classList.add('active');
+                document.getElementById('tab_general').classList.add('active');
+            } else {
+                document.getElementById('tab_btn_devices').classList.add('active');
+                document.getElementById('tab_devices').classList.add('active');
+            }
+        }
+
+        function updateDeviceBadge() {
+            document.getElementById('devices_badge').innerText = currentDevices.length;
+        }
+
+        // Render device cards with clean 2-row layout
+        function renderDevices() {
+            const container = document.getElementById('devices_container');
+            container.innerHTML = '';
+
+            if (currentDevices.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p style="font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">No devices configured yet.</p>
+                        <p style="color: #64748b; font-size: 0.82rem;">Click <b>"+ Add Device"</b> to monitor receipt printers, routers, APs, or POS terminals.</p>
+                    </div>
+                `;
+                updateDeviceBadge();
+                return;
+            }
+
+            currentDevices.forEach((dev, index) => {
+                const card = document.createElement('div');
+                card.className = 'device-card';
+                card.id = `device_card_${index}`;
+
+                card.innerHTML = `
+                    <!-- Top Row: Enable, Device Name, Presets, Test & Delete -->
+                    <div class="device-card-header">
+                        <div class="device-header-left">
+                            <input type="checkbox" ${dev.enabled ? 'checked' : ''} onchange="updateDeviceField(${index}, 'enabled', this.checked)" title="Enable / Disable monitor" style="width: 16px; height: 16px; accent-color: var(--accent-color); cursor: pointer; flex-shrink: 0;">
+                            <input type="text" class="device-name-input" value="${escapeHtml(dev.name || '')}" placeholder="Device Name (e.g. Cashier Printer)" onchange="updateDeviceField(${index}, 'name', this.value)">
+                        </div>
+
+                        <div class="device-header-right">
+                            <select class="preset-select" onchange="applyPreset(${index}, this.value)">
+                                <option value="">-- Apply Preset --</option>
+                                <option value="printer">🖨️ Receipt Printer (9100)</option>
+                                <option value="router">🌐 Router / Gateway (ICMP)</option>
+                                <option value="ap">📶 Wi-Fi AP (ICMP)</option>
+                                <option value="pos_rdp">🖥️ POS / Terminal (RDP 3389)</option>
+                                <option value="pos_icmp">🖥️ POS / Terminal (ICMP)</option>
+                                <option value="custom_tcp">⚙️ Custom TCP Port</option>
+                                <option value="custom_icmp">⚙️ Custom ICMP Ping</option>
+                            </select>
+
+                            <span id="test_badge_${index}" class="test-badge"></span>
+                            <button class="btn-test" onclick="testDevice(${index})">⚡ Test</button>
+                            <button class="btn-icon delete" onclick="removeDevice(${index})" title="Delete device">✕</button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row: Target IP/Host, Check Type & Port, Kuma Push Token -->
+                    <div class="device-card-body">
+                        <div class="form-group" style="flex: 1.2;">
+                            <label>Target IP / Hostname</label>
+                            <input type="text" value="${escapeHtml(dev.target || '')}" placeholder="192.168.1.100 or domain.com" onchange="updateDeviceField(${index}, 'target', this.value)" spellcheck="false">
+                        </div>
+
+                        <div class="form-group" style="flex: 1;">
+                            <label>Check Type & Port</label>
+                            <div class="type-port-group">
+                                <select onchange="updateDeviceCheckType(${index}, this.value)" style="flex: 1.2;">
+                                    <option value="icmp" ${dev.check_type === 'icmp' ? 'selected' : ''}>ICMP (Ping)</option>
+                                    <option value="tcp" ${dev.check_type === 'tcp' ? 'selected' : ''}>TCP (Port)</option>
+                                </select>
+                                <input type="number" id="port_${index}" value="${dev.port || 9100}" ${dev.check_type === 'icmp' ? 'disabled style="display:none;"' : 'style="flex: 0.8; min-width: 65px;"'} placeholder="Port" onchange="updateDeviceField(${index}, 'port', parseInt(this.value, 10))">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="flex: 1.5;">
+                            <label>Uptime Kuma Push Token</label>
+                            <input type="text" value="${escapeHtml(dev.token || '')}" placeholder="Token (e.g. abc123xyz) or Full URL" onchange="updateDeviceField(${index}, 'token', this.value)" spellcheck="false">
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            updateDeviceBadge();
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function addDevice() {
+            currentDevices.push({
+                name: 'New Device',
+                target: '',
+                check_type: 'tcp',
+                port: 9100,
+                token: '',
+                enabled: true
+            });
+            renderDevices();
+            const container = document.getElementById('tab_devices');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeDevice(index) {
+            currentDevices.splice(index, 1);
+            renderDevices();
+        }
+
+        function updateDeviceField(index, field, value) {
+            if (currentDevices[index]) {
+                currentDevices[index][field] = value;
+            }
+        }
+
+        function updateDeviceCheckType(index, type) {
+            if (currentDevices[index]) {
+                currentDevices[index].check_type = type;
+                renderDevices();
+            }
+        }
+
+        function applyPreset(index, preset) {
+            if (!currentDevices[index]) return;
+            const dev = currentDevices[index];
+
+            switch (preset) {
+                case 'printer':
+                    dev.name = (!dev.name || dev.name === 'New Device') ? 'Receipt Printer' : dev.name;
+                    dev.check_type = 'tcp';
+                    dev.port = 9100;
+                    break;
+                case 'router':
+                    dev.name = (!dev.name || dev.name === 'New Device') ? 'Main Router' : dev.name;
+                    dev.check_type = 'icmp';
+                    dev.port = null;
+                    break;
+                case 'ap':
+                    dev.name = (!dev.name || dev.name === 'New Device') ? 'Wi-Fi AP' : dev.name;
+                    dev.check_type = 'icmp';
+                    dev.port = null;
+                    break;
+                case 'pos_rdp':
+                    dev.name = (!dev.name || dev.name === 'New Device') ? 'POS Terminal' : dev.name;
+                    dev.check_type = 'tcp';
+                    dev.port = 3389;
+                    break;
+                case 'pos_icmp':
+                    dev.name = (!dev.name || dev.name === 'New Device') ? 'POS Terminal' : dev.name;
+                    dev.check_type = 'icmp';
+                    dev.port = null;
+                    break;
+                case 'custom_tcp':
+                    dev.check_type = 'tcp';
+                    dev.port = dev.port || 80;
+                    break;
+                case 'custom_icmp':
+                    dev.check_type = 'icmp';
+                    dev.port = null;
+                    break;
+            }
+            renderDevices();
+        }
+
+        // Test single device connection
+        function testDevice(index) {
+            const dev = currentDevices[index];
+            if (!dev || !dev.target) {
+                showTestBadge(index, 'error', 'Missing target IP/Host');
+                return;
+            }
+
+            showTestBadge(index, 'loading', 'Testing...');
+
+            const payload = {
+                action: 'test_device',
+                id: index,
+                target: dev.target,
+                check_type: dev.check_type,
+                port: dev.port || 9100
+            };
+
+            if (window.ipc) {
+                window.ipc.postMessage(JSON.stringify(payload));
+            }
+        }
+
+        function showTestBadge(index, status, text) {
+            const badge = document.getElementById(`test_badge_${index}`);
+            if (!badge) return;
+
+            badge.className = `test-badge ${status}`;
+            badge.innerText = text;
+        }
+
+        function showStatus(text, isError = false) {
+            const el = document.getElementById('status_indicator');
+            el.innerText = text;
+            el.style.color = isError ? 'var(--danger-color)' : 'var(--success-color)';
+            el.style.opacity = '1';
+            setTimeout(() => {
+                el.style.opacity = '0';
+            }, 3000);
+        }
+
+        // IPC Handlers
         window.onload = () => {
-            window.ipc.postMessage('request_config');
+            if (window.ipc) {
+                window.ipc.postMessage('request_config');
+            }
         };
 
-        // Listen for data from Rust
         window.addEventListener('message', (event) => {
             try {
                 const data = JSON.parse(event.data);
+
                 if (data.type === 'config') {
-                    urlInput.value = data.kuma_push_url;
-                    intervalInput.value = data.interval_sec;
-                    autostartInput.checked = data.autostart;
-                    loggingInput.checked = data.enable_logging !== false;
-                    pingTargetInput.value = data.ping_target || '';
+                    const cfg = data.data;
+                    document.getElementById('branch_name').value = cfg.branch_name || '';
+                    document.getElementById('kuma_base_url').value = cfg.kuma_base_url || '';
+                    document.getElementById('interval_sec').value = cfg.interval_sec || 30;
+                    document.getElementById('agent_push_token').value = cfg.agent_push_token || '';
+                    document.getElementById('autostart').checked = !!cfg.autostart;
+                    document.getElementById('enable_logging').checked = cfg.enable_logging !== false;
+
+                    currentDevices = Array.isArray(cfg.devices) ? cfg.devices : [];
+                    renderDevices();
+                } else if (data.type === 'test_result') {
+                    if (data.success) {
+                        showTestBadge(data.id, 'success', `🟢 ${data.latency} ms`);
+                    } else {
+                        showTestBadge(data.id, 'error', `🔴 ${data.message || 'Offline'}`);
+                    }
                 } else if (data.type === 'success') {
-                    statusEl.innerText = 'Settings saved successfully!';
+                    showStatus('Settings saved successfully!');
                     setTimeout(() => {
-                        window.ipc.postMessage('close_window');
-                    }, 1500);
+                        closeAppWindow();
+                    }, 1200);
                 }
             } catch (e) {
-                console.error('Failed to parse message:', e);
+                console.error('Failed to parse IPC message:', e);
             }
         });
 
-        saveBtn.onclick = () => {
+        function saveConfiguration() {
             const config = {
-                kuma_push_url: urlInput.value,
-                interval_sec: parseInt(intervalInput.value, 10),
-                autostart: autostartInput.checked,
-                enable_logging: loggingInput.checked,
-                ping_target: pingTargetInput.value
+                branch_name: document.getElementById('branch_name').value || 'Main Branch',
+                kuma_base_url: document.getElementById('kuma_base_url').value || '',
+                interval_sec: parseInt(document.getElementById('interval_sec').value, 10) || 30,
+                agent_push_token: document.getElementById('agent_push_token').value || '',
+                autostart: document.getElementById('autostart').checked,
+                enable_logging: document.getElementById('enable_logging').checked,
+                devices: currentDevices
             };
-            window.ipc.postMessage(JSON.stringify(config));
-            statusEl.innerText = 'Saving...';
-        };
 
-        cancelBtn.onclick = () => {
-            window.ipc.postMessage('close_window');
-        };
+            showStatus('Saving changes...');
+            if (window.ipc) {
+                window.ipc.postMessage(JSON.stringify({
+                    action: 'save_config',
+                    config: config
+                }));
+            }
+        }
+
+        function closeAppWindow() {
+            if (window.ipc) {
+                window.ipc.postMessage('close_window');
+            }
+        }
     </script>
 </body>
 

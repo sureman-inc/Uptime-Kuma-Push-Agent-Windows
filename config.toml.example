@@ -1,3 +1,55 @@
-kuma_push_url = "https://_YOUR_DOMAIN_/api/push/_YOUR_TOKEN_?status=up&msg=OK"
+# Uptime Kuma Push Agent - Branch & Multi-Device Monitoring Configuration
+
+# Location / Branch identifier
+branch_name = "Main Branch"
+
+# Base URL of your Uptime Kuma instance (tokens will be automatically appended)
+kuma_base_url = "https://kuma.example.com"
+
+# Check interval in seconds (default: 30)
 interval_sec = 30
-ping_target = "8.8.8.8"
+
+# Launch automatically on Windows startup
+autostart = false
+
+# Enable logging to %APPDATA%\KumaAgent\logs\agent.log
+enable_logging = true
+
+# Optional: Push Token for the Host Agent PC heartbeat
+agent_push_token = ""
+
+# --- Monitored Devices List ---
+
+# 1. Receipt / Kitchen Printer (TCP Port 9100)
+[[devices]]
+name = "Cashier Receipt Printer"
+target = "192.168.1.160"
+check_type = "tcp"
+port = 9100
+token = "PRINTER_PUSH_TOKEN_1"
+enabled = true
+
+# 2. Main Branch Router / Gateway (Native ICMP Ping)
+[[devices]]
+name = "Main Router"
+target = "192.168.1.1"
+check_type = "icmp"
+token = "ROUTER_PUSH_TOKEN_2"
+enabled = true
+
+# 3. Wi-Fi Access Point (Native ICMP Ping)
+[[devices]]
+name = "Dining Hall Wi-Fi AP"
+target = "192.168.1.50"
+check_type = "icmp"
+token = "WIFI_AP_PUSH_TOKEN_3"
+enabled = true
+
+# 4. Waitress POS Monoblock (RDP Port 3389 or ICMP)
+[[devices]]
+name = "Waitress POS Terminal 2"
+target = "192.168.1.102"
+check_type = "tcp"
+port = 3389
+token = "POS_PUSH_TOKEN_4"
+enabled = true
