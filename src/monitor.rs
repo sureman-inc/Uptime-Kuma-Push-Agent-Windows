@@ -158,14 +158,6 @@ pub async fn test_target(
 pub async fn send_kuma_push(
     client: &Client,
     kuma_base_url: &str,
-    token: &str,
-    is_up: bool,
-    latency_ms: u128,
-    msg: &str,
-/// Push status and latency to Uptime Kuma
-pub async fn send_kuma_push(
-    client: &Client,
-    kuma_base_url: &str,
     token_or_url: &str,
     is_up: bool,
     latency_ms: u128,
