@@ -162,30 +162,87 @@ pub async fn send_kuma_push(
     is_up: bool,
     latency_ms: u128,
     msg: &str,
+/// Push status and latency to Uptime Kuma
+pub async fn send_kuma_push(
+    client: &Client,
+    kuma_base_url: &str,
+    token_or_url: &str,
+    is_up: bool,
+    latency_ms: u128,
+    msg: &str,
 ) -> Result<u16, String> {
-    let token_clean = token.trim();
-    if token_clean.is_empty() {
-        return Err("Empty push token".to_string());
+    let raw = token_or_url.trim();
+    if raw.is_empty() {
+        return Err("Empty push token or URL".to_string());
     }
 
     let status_str = if is_up { "up" } else { "down" };
-    let final_url = if token_clean.starts_with("http://") || token_clean.starts_with("https://") {
-        let mut u = token_clean.to_string();
-        if u.contains("{STATUS}") {
-            u = u.replace("{STATUS}", status_str);
+    let latency_str = latency_ms.max(1).to_string();
+
+    let final_url = if raw.starts_with("http://") || raw.starts_with("https://") {
+        let mut base_and_query = raw.to_string();
+
+        // 1. Handle template placeholders if present
+        if base_and_query.contains("{STATUS}") {
+            base_and_query = base_and_query.replace("{STATUS}", status_str);
         }
-        if u.contains("{PING}") || u.contains("{EXPING}") {
-            u = u.replace("{PING}", &latency_ms.to_string())
-                 .replace("{EXPING}", &latency_ms.to_string());
+        if base_and_query.contains("{PING}") || base_and_query.contains("{EXPING}") {
+            base_and_query = base_and_query
+                .replace("{PING}", &latency_str)
+                .replace("{EXPING}", &latency_str);
         }
-        if u.contains("{MSG}") {
-            u = u.replace("{MSG}", msg);
+        if base_and_query.contains("{MSG}") {
+            base_and_query = base_and_query.replace("{MSG}", msg);
         }
-        if !u.contains("status=") {
-            let sep = if u.contains('?') { "&" } else { "?" };
-            u = format!("{}{}status={}&ping={}&msg={}", u, sep, status_str, latency_ms, msg);
+
+        // 2. Parse and replace existing query parameters (e.g. status=up&msg=OK&ping=)
+        if let Some((url_path, query)) = base_and_query.split_once('?') {
+            let mut params: Vec<(String, String)> = Vec::new();
+            let mut has_status = false;
+            let mut has_ping = false;
+            let mut has_msg = false;
+
+            for pair in query.split('&') {
+                if pair.is_empty() { continue; }
+                if let Some((k, v)) = pair.split_once('=') {
+                    if k == "status" {
+                        params.push((k.to_string(), status_str.to_string()));
+                        has_status = true;
+                    } else if k == "ping" {
+                        params.push((k.to_string(), latency_str.clone()));
+                        has_ping = true;
+                    } else if k == "msg" {
+                        let final_msg = if !is_up { msg.to_string() } else if v.is_empty() { "OK".to_string() } else { v.to_string() };
+                        params.push((k.to_string(), final_msg));
+                        has_msg = true;
+                    } else {
+                        params.push((k.to_string(), v.to_string()));
+                    }
+                } else {
+                    params.push((pair.to_string(), String::new()));
+                }
+            }
+
+            if !has_status {
+                params.push(("status".to_string(), status_str.to_string()));
+            }
+            if !has_ping {
+                params.push(("ping".to_string(), latency_str));
+            }
+            if !has_msg {
+                params.push(("msg".to_string(), msg.to_string()));
+            }
+
+            let query_str = params
+                .into_iter()
+                .map(|(k, v)| format!("{}={}", k, v))
+                .collect::<Vec<_>>()
+                .join("&");
+
+            format!("{}?{}", url_path, query_str)
+        } else {
+            format!("{}?status={}&msg={}&ping={}", base_and_query, status_str, msg, latency_str)
         }
-        u
     } else {
         let base = kuma_base_url.trim().trim_end_matches('/');
         if base.is_empty() {
@@ -194,10 +251,10 @@ pub async fn send_kuma_push(
         format!(
             "{}/api/push/{}?status={}&msg={}&ping={}",
             base,
-            token_clean,
+            raw,
             status_str,
             msg,
-            latency_ms
+            latency_str
         )
     };
 
@@ -219,7 +276,7 @@ pub async fn send_kuma_push(
     }
 }
 
-/// Run monitoring loop for all devices and agent host
+/// Run monitoring loop for all devices and agent host with exact interval compensation
 pub async fn run_monitoring_loop(config_arc: Arc<Mutex<Config>>) {
     let client = Client::builder()
         .timeout(Duration::from_secs(10))
@@ -230,6 +287,8 @@ pub async fn run_monitoring_loop(config_arc: Arc<Mutex<Config>>) {
         });
 
     loop {
+        let cycle_start = tokio::time::Instant::now();
+
         let (branch_name, kuma_base_url, interval_sec, agent_push_token, devices) = {
             let cfg = config_arc.lock().unwrap();
             (
@@ -243,6 +302,8 @@ pub async fn run_monitoring_loop(config_arc: Arc<Mutex<Config>>) {
 
         info!("--- Starting monitoring cycle for branch '{}' ({} devices configured) ---", branch_name, devices.len());
 
+        let mut check_tasks = Vec::new();
+
         // 1. Monitor Host PC / Agent Heartbeat if configured
         if !agent_push_token.trim().is_empty() {
             let client_ref = client.clone();
@@ -250,18 +311,17 @@ pub async fn run_monitoring_loop(config_arc: Arc<Mutex<Config>>) {
             let token = agent_push_token.clone();
             let b_name = branch_name.clone();
 
-            tokio::spawn(async move {
+            check_tasks.push(tokio::spawn(async move {
                 let (up, latency, _msg) = ping_icmp("1.1.1.1", 2000).await;
                 let push_msg = if up { format!("{} (Agent Online)", b_name) } else { "Agent (Degraded)".to_string() };
-                match send_kuma_push(&client_ref, &base_url, &token, true, latency, &push_msg).await {
+                match send_kuma_push(&client_ref, &base_url, &token, up, latency, &push_msg).await {
                     Ok(code) => info!("[Agent Heartbeat] Push sent successfully (HTTP {})", code),
                     Err(e) => warn!("[Agent Heartbeat] Failed to push heartbeat: {}", e),
                 }
-            });
+            }));
         }
 
         // 2. Concurrently monitor all enabled devices
-        let mut check_tasks = Vec::new();
         for dev in devices.into_iter().filter(|d| d.enabled && !d.target.trim().is_empty()) {
             let client_ref = client.clone();
             let base_url = kuma_base_url.clone();
@@ -291,7 +351,13 @@ pub async fn run_monitoring_loop(config_arc: Arc<Mutex<Config>>) {
             let _ = task.await;
         }
 
-        let sleep_duration = Duration::from_secs(interval_sec.max(5));
-        tokio::time::sleep(sleep_duration).await;
+        // Compensate for execution time so the interval is exact
+        let elapsed = cycle_start.elapsed();
+        let target_interval = Duration::from_secs(interval_sec.max(5));
+        if elapsed < target_interval {
+            tokio::time::sleep(target_interval - elapsed).await;
+        } else {
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
     }
 }
